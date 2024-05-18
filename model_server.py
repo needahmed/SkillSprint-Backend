@@ -1,6 +1,7 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import joblib
+import os
 import traceback
 
 app = Flask(__name__)
@@ -14,12 +15,12 @@ def predict_career_path():
     try:
         data = request.get_json()
         print("Received data:", data)
-        
+
         if 'answers' not in data:
             raise KeyError('The "answers" key is required in the payload.')
-        
+
         answers = data['answers']
-        
+
         # Ensure the number of answers matches the model's feature expectations
         expected_number_of_answers = 15  # Adjust based on your model's feature count
         if len(answers) != expected_number_of_answers:
@@ -27,11 +28,11 @@ def predict_career_path():
 
         prediction = model.predict([answers])
         return jsonify({'careerPath': prediction[0]})
-    
-    except KeyError as ke:  
+
+    except KeyError as ke:
         print(traceback.format_exc())
         return jsonify({'error': str(ke)}), 400
-    
+
     except ValueError as ve:
         print(traceback.format_exc())
         return jsonify({'error': str(ve)}), 400
@@ -41,4 +42,5 @@ def predict_career_path():
         return jsonify({'error': 'An error occurred processing your request.'}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 8000))
+    app.run(host='0.0.0.0', port=port, debug=True)
